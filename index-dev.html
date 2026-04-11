@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <style>
+        body, html { margin: 0; padding: 0; background: #000; color: #0f0; font-family: monospace; height: 100%; overflow: hidden; }
+        #terminal { padding: 15px; height: 100%; overflow-y: auto; box-sizing: border-box; }
+        #output { white-space: pre-wrap; word-break: break-all; }
+        #cursor { display: inline-block; width: 8px; height: 15px; background: #0f0; animation: blink 1s infinite; vertical-align: middle; }
+        @keyframes blink { 50% { opacity: 0; } }
+        /* Hidden input to catch Android keyboard events */
+        #hidden-input { position: absolute; opacity: 0; pointer-events: none; }
+    </style>
+</head>
+<body onclick="focusInput()">
+
+    <div id="terminal">
+        <div id="output">Mobile Terminal v1.0.0\nType 'help' to begin.\n\n</div>
+        <span id="prompt-line"></span><span id="cursor"></span>
+        <input type="text" id="hidden-input" autocomplete="off" spellcheck="false">
+    </div>
+
+    <script>
+        const output = document.getElementById('output');
+        const promptLine = document.getElementById('prompt-line');
+        const input = document.getElementById('hidden-input');
+        const terminal = document.getElementById('terminal');
+        let currentPrompt = "> ";
+
+        function focusInput() { input.focus(); }
+
+        input.addEventListener('input', () => {
+            promptLine.textContent = currentPrompt + input.value;
+            terminal.scrollTop = terminal.scrollHeight;
+        });
+
+        input.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                const command = input.value.trim();
+                
+                // 1. Echo the command to the screen
+                output.textContent += currentPrompt + input.value + '\n';
+                
+                // 2. Process logic
+                handleCommand(command);
+                
+                // 3. Reset
+                input.value = '';
+                promptLine.textContent = currentPrompt;
+                terminal.scrollTop = terminal.scrollHeight;
+            }
+        });
+
+        function handleCommand(cmd) {
+            const c = cmd.toLowerCase();
+            if (c === 'help') {
+                print('Available: clear, date, echo [text], color [code]');
+            } else if (c === 'clear') {
+                output.textContent = '';
+            } else if (c === 'date') {
+                print(new Date().toLocaleString());
+            } else if (c.startsWith('echo ')) {
+                print(cmd.substring(5));
+            } else if (c.startsWith('color ')) {
+                const color = cmd.split(' ')[1];
+                document.body.style.color = color;
+                document.getElementById('cursor').style.background = color;
+            } else if (c !== "") {
+                print(`Command not found: ${cmd}`);
+            }
+        }
+
+        function print(text) {
+            output.textContent += text + '\n';
+        }
+
+        // Keep focused on load
+        focusInput();
+    </script>
+</body>
+</html>
